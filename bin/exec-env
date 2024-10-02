@@ -1,0 +1,35 @@
+#! /usr/bin/env bash
+
+if [[ ${MISE_TRACE-} == 1 ]]; then
+  set -x
+fi
+
+set -euo pipefail
+
+setup_nix() {
+  local OLD_PATH=${PATH}
+
+  FILES=(
+    "${MISE_PROJECT_ROOT}/flake.nix"
+    "${MISE_PROJECT_ROOT}/flake.lock"
+  )
+
+  read -r _ HASH < <(cat "${FILES[@]}" | openssl sha256)
+
+  # check hash to prevent unnecessarily re-sourcing environment
+  HASH_FILE=${TMPDIR%/}/mise-nix-${HASH}
+
+  if [[ ! -e ${HASH_FILE} ]]; then
+    trap 'rm '"${HASH_FILE}" ERR INT TERM
+    # shellcheck source=/dev/null
+    nix print-dev-env > "${HASH_FILE}"
+    trap - ERR INT TERM
+  fi
+
+  # shellcheck source=/dev/null
+  source "${HASH_FILE}"
+
+  export MISE_ADD_PATH=${PATH%"${OLD_PATH}"}
+}
+
+setup_nix

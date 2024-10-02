@@ -1,0 +1,11 @@
+#:schema https://mise.jdx.dev/schema/mise.plugin.json
+
+[exec-env]
+cache-key = [
+  """
+  {{ [project_root] | concat(with='flake.nix') | join_path | hash_file }}
+  """,
+  """
+  {{ [project_root] | concat(with='flake.lock') | join_path | hash_file }}
+  """
+]
