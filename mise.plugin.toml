@@ -3,24 +3,17 @@
 [exec-env]
 cache-key = [
   """
-  {% if opts.flake_nix %}
-    {{ opts.flake_nix | canonicalize }}
-  {% endif %}
+  {% set option = opts.flake_nix | default(value='flake.nix') %}
+  {% set path = [project_root, option] | join_path %}
+  {% if path is exists %}{{ path | hash_file }}{% endif %}
   """,
   """
-  {{ [project_root] | concat(with=(opts.flake_nix | default(value='flake.nix'))) | join_path | hash_file }}
+  {% set option = opts.flake_lock | default(value='flake.lock') %}
+  {% set path = [project_root, option] | join_path %}
+  {% if path is exists %}{{ path | hash_file }}{% endif %}
   """,
   """
-  {% if opts.flake_lock %}
-    {{ opts.flake_lock | canonicalize }}
-  {% endif %}
-  """,
-  """
-  {{ [project_root] | concat(with=(opts.flake_lock | default(value='flake.lock'))) | join_path | hash_file }}
-  """,
-  """
-  {% if opts.installable %}
-    {{ opts.installable }}
-  {% endif %}
+  {% set option = opts.installable | default(value='.') %}
+  {{ option }}
   """,
 ]
