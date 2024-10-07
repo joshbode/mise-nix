@@ -4,7 +4,7 @@
 cache-key = [
   """
   {% if opts.flake_nix %}
-    {{ opts.flake_nix }}
+    {{ opts.flake_nix | canonicalize }}
   {% endif %}
   """,
   """
@@ -12,10 +12,15 @@ cache-key = [
   """,
   """
   {% if opts.flake_lock %}
-    {{ opts.flake_lock }}
+    {{ opts.flake_lock | canonicalize }}
   {% endif %}
   """,
   """
   {{ [project_root] | concat(with=(opts.flake_lock | default(value='flake.lock'))) | join_path | hash_file }}
+  """,
+  """
+  {% if opts.installable %}
+    {{ opts.installable }}
+  {% endif %}
   """,
 ]

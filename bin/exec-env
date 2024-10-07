@@ -9,8 +9,9 @@ set -euo pipefail
 setup_nix() {
   local OLD_PATH=${PATH}
 
-  FLAKE_NIX=${MISE_TOOL_OPTS__FLAKE_NIX:-${MISE_PROJECT_ROOT}/flake.nix}
-  FLAKE_LOCK=${MISE_TOOL_OPTS__FLAKE_LOCK:-${MISE_PROJECT_ROOT}/flake.lock}
+  local FLAKE_NIX=${MISE_PROJECT_ROOT}/${MISE_TOOL_OPTS__FLAKE_NIX:-flake.nix}
+  local FLAKE_LOCK=${MISE_PROJECT_ROOT}/${MISE_TOOL_OPTS__FLAKE_LOCK:-flake.lock}
+  local INSTALLABLE=${MISE_TOOL_OPTS__INSTALLABLE:-.}
 
   read -r _ HASH < <(cat "${FLAKE_NIX}" "${FLAKE_LOCK}" | openssl sha256)
 
@@ -19,10 +20,7 @@ setup_nix() {
 
   if [[ ! -e ${HASH_FILE} ]]; then
     trap 'rm '"${HASH_FILE}" ERR INT TERM
-    nix print-dev-env \
-      --file "${FLAKE_NIX}" \
-      --reference-lock-file "${FLAKE_LOCK}" \
-      > "${HASH_FILE}"
+    nix print-dev-env --reference-lock-file "${FLAKE_LOCK}" "${INSTALLABLE}" > "${HASH_FILE}"
     trap - ERR INT TERM
   fi
 
