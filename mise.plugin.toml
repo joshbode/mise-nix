@@ -3,9 +3,19 @@
 [exec-env]
 cache-key = [
   """
-  {{ [project_root] | concat(with='flake.nix') | join_path | hash_file }}
+  {% if opts.flake_nix %}
+    {{ opts.flake_nix }}
+  {% endif %}
   """,
   """
-  {{ [project_root] | concat(with='flake.lock') | join_path | hash_file }}
+  {{ [project_root] | concat(with=(opts.flake_nix | default(value='flake.nix'))) | join_path | hash_file }}
+  """,
   """
+  {% if opts.flake_lock %}
+    {{ opts.flake_lock }}
+  {% endif %}
+  """,
+  """
+  {{ [project_root] | concat(with=(opts.flake_lock | default(value='flake.lock'))) | join_path | hash_file }}
+  """,
 ]
