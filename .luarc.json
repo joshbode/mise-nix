@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime": {
+    "path": [
+      "lib/utils.lua",
+      "types.lua"
+    ]
+  },
+  "format": {
+    "defaultConfig": {
+      "align_array_table": "false",
+      "align_continuous_assign_statement": "false",
+      "align_continuous_rect_table_field": "false"
+    }
+  }
+}
