@@ -93,11 +93,27 @@ function PLUGIN:MiseEnv(ctx)
     return {}
   end
 
+  ---@class DevEnv
+  ---@field variables
+  ---| { string: { type: "exported" | "var" | "array", value: any } }
+  ---@field bashFunctions { string: string}
+
   local handle ---@type file*?
+  local status ---@type boolean
+  local data ---@type DevEnv?
+
   if utils.exists(filename) then
     -- load from cache
     handle = io.open(filename)
-  else
+    if handle ~= nil then
+      status, data = pcall(json.decode, handle:read("*a"))
+      handle:close()
+    else
+      status, data = false, nil
+    end
+  end
+
+  if not status or data == nil then
     -- generate from nix and cache result
     local command = [[
       set -o pipefail
@@ -107,25 +123,19 @@ function PLUGIN:MiseEnv(ctx)
         tee %q
     ]]
     handle = io.popen(command:format(lock_file, filename))
-  end
 
-  if handle == nil then
-    utils.log("Unable to get environment")
-    return {}
-  end
+    if handle == nil then
+      utils.log("Unable to get environment")
+      return {}
+    end
 
-  ---@class DevEnv
-  ---@field variables
-  ---| { string: { type: "exported" | "var" | "array", value: any } }
-  ---@field bashFunctions { string: string}
+    status, data = pcall(json.decode, handle:read("*a"))
+    handle:close()
 
-  ---@type boolean, DevEnv
-  local status, data = pcall(json.decode, handle:read("*a"))
-  handle:close()
-
-  if not status then
-    utils.log("Unable to load environment")
-    return {}
+    if not status or data == nil then
+      utils.log("Unable to load environment")
+      return {}
+    end
   end
 
   ---@type { key: string, value: string}[]
