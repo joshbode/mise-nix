@@ -62,7 +62,12 @@ local function make_unload_hook(project_root, variables, functions)
 end
 
 function PLUGIN:MiseEnv(ctx)
-  local options = ctx.options;
+  if ctx.options == false then
+    return {}
+  end
+
+  ---@type Options
+  local options = ctx.options == true and {} or ctx.options
 
   local project_root = utils.find_project_root("flake.nix")
   if project_root == nil then

@@ -1,2 +1,2 @@
 [env]
-_.nix = {}
+_.nix = true

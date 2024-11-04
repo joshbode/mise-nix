@@ -14,7 +14,7 @@
 ---@field flake_lock string? Optional lock file to use
 
 ---@class Context
----@field options Options
+---@field options Options | boolean
 
 ---@class Plugin: PluginBase
 ---@field MisePath fun(self: Plugin, ctx: Context): string[] Update PATH
