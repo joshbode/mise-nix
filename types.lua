@@ -23,3 +23,8 @@
 ---@class Strings
 ---@field split fun(x: string, delim: string): string[] Split string by delimiter into array of strings
 ---@field join fun(x: string[], delim: string): string Join array of strings with delimiter
+
+---@class DevEnv
+---@field variables
+---| { string: { type: "exported" | "var" | "array", value: any } }
+---@field bashFunctions { string: string}

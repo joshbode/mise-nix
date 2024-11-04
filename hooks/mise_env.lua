@@ -75,12 +75,17 @@ local function get_env(handle)
 end
 
 function PLUGIN:MiseEnv(ctx)
-  if ctx.options == false then
+  local options = ctx.options
+  if options == false then
     return {}
+  elseif options == true then
+    options = {}
   end
+  ---@cast options Options
 
-  ---@type Options
-  local options = ctx.options == true and {} or ctx.options
+  if options.flake_lock == nil then
+    options.flake_lock = "flake.lock"
+  end
 
   local project_root = utils.find_project_root("flake.nix")
   if project_root == nil then
@@ -88,15 +93,15 @@ function PLUGIN:MiseEnv(ctx)
     return {}
   end
 
-  local lock_file = options.flake_lock or ("%s/%s"):format(project_root, "flake.lock")
+  local flake_file = ("%s/%s"):format(project_root, "flake.nix")
+  local lock_file = ("%s/%s"):format(project_root, options.flake_lock)
+
   if not utils.exists(lock_file) then
     utils.log("Lock file does not exist: %s", lock_file)
+    return {}
   end
 
-  local hash = utils.get_hash(
-    ("%s/%s"):format(project_root, "flake.nix"),
-    lock_file
-  )
+  local hash = utils.get_hash(flake_file, lock_file)
   if hash == nil then
     utils.log("Unable to hash flake files")
     return {}
@@ -109,11 +114,6 @@ function PLUGIN:MiseEnv(ctx)
   if os.getenv("MISE_NIX") == hash then
     return {}
   end
-
-  ---@class DevEnv
-  ---@field variables
-  ---| { string: { type: "exported" | "var" | "array", value: any } }
-  ---@field bashFunctions { string: string}
 
   ---@type DevEnv?
   local env = nil
