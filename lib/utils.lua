@@ -2,8 +2,8 @@ local strings = require("vfox.strings") ---@class Strings
 
 ---Log info to stdout
 ---@param x any
-local function log(x)
-  print(("echo mise-nix: %q"):format(x))
+local function log(x, ...)
+  print(("echo mise-nix: %q"):format(x:format(...)))
 end
 
 ---Check if file exists

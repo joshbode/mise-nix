@@ -89,12 +89,16 @@ function PLUGIN:MiseEnv(ctx)
   end
 
   local lock_file = options.flake_lock or ("%s/%s"):format(project_root, "flake.lock")
+  if not utils.exists(lock_file) then
+    utils.log("Lock file does not exist: %s", lock_file)
+  end
+
   local hash = utils.get_hash(
     ("%s/%s"):format(project_root, "flake.nix"),
     lock_file
   )
   if hash == nil then
-    utils.log("Unable to hash flake")
+    utils.log("Unable to hash flake files")
     return {}
   end
 
