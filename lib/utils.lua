@@ -1,9 +1,21 @@
+local json = require("json")
 local strings = require("vfox.strings") ---@class Strings
 
 ---Log info to stderr
 ---@param message any
 local function log(message, ...)
-  print(("echo mise-nix: %q >&2"):format(message:format(...)))
+  if ... ~= nil then
+    local args = {}
+    for i, value in ipairs({...}) do
+      args[i] = type(value) == "table" and json.encode(value) or value
+    end
+    message = message:format(table.unpack(args))
+  elseif type(message) ~= "string" then
+    message = json.encode(message)
+  end
+
+  message = string.gsub(message, "'", "'\\''")  -- quote single quotes
+  print(("printf 'mise-nix: %%s\n' '%s' >&2"):format(message))
 end
 
 ---Check if file exists
