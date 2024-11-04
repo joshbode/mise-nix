@@ -36,20 +36,21 @@ local function make_unload_hook(project_root, variables, functions)
   local lines = {} ---@type string[]
   table.insert(lines, "_unload_mise_nix() {")
   table.insert(lines, ("  local PROJECT_ROOT=%q"):format(project_root))
-  table.insert(lines, '  if [[ "${PWD#${PROJECT_ROOT}}" == "${PWD}" ]]; then')
+  table.insert(lines, '  if [[ "${PWD#${PROJECT_ROOT}}/" != "${PWD}/" ]]; then return; fi')
+  table.insert(lines, "  unset MISE_NIX")
   for _, name in ipairs(variables) do
-    table.insert(lines, ("    unset %q"):format(name))
+    table.insert(lines, ("  unset %q"):format(name))
   end
   for _, name in ipairs(functions) do
-    table.insert(lines, ("    unset -f %q"):format(name))
+    table.insert(lines, ("  unset -f %q"):format(name))
   end
   if shell == "zsh" then
-    table.insert(lines, "    add-zsh-hook -D chpwd _unload_mise_nix")
+    table.insert(lines, "  add-zsh-hook -D chpwd _unload_mise_nix")
   elseif shell == "bash" then
-    table.insert(lines, "    PROMPT_COMMAND=${PROMPT_COMMAND%;_unload_mise_nix}")
+    table.insert(lines, "  PROMPT_COMMAND=${PROMPT_COMMAND%;_unload_mise_nix}")
   end
-  table.insert(lines, "  fi")
   table.insert(lines, "}")
+
   if shell == "zsh" then
     table.insert(lines, "add-zsh-hook chpwd _unload_mise_nix")
   elseif shell == "bash" then
@@ -58,6 +59,7 @@ local function make_unload_hook(project_root, variables, functions)
     table.insert(lines, '    PROMPT_COMMAND="${PROMPT_COMMAND};_unload_mise_nix"')
     table.insert(lines, '  fi')
   end
+
   return strings.join(lines, "\n")
 end
 
