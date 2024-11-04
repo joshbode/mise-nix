@@ -61,6 +61,19 @@ local function make_unload_hook(project_root, variables, functions)
   return strings.join(lines, "\n")
 end
 
+---Load environment from handle
+---@param handle file*?
+---@return DevEnv?
+local function get_env(handle)
+  if handle ~= nil then
+    local status, data = pcall(json.decode, handle:read("*a"))
+    handle:close()
+    return status and data or nil
+  else
+    return nil
+  end
+end
+
 function PLUGIN:MiseEnv(ctx)
   if ctx.options == false then
     return {}
@@ -98,41 +111,26 @@ function PLUGIN:MiseEnv(ctx)
   ---| { string: { type: "exported" | "var" | "array", value: any } }
   ---@field bashFunctions { string: string}
 
-  local handle ---@type file*?
-  local status ---@type boolean
-  local data ---@type DevEnv?
+  ---@type DevEnv?
+  local env = nil
 
   if utils.exists(filename) then
     -- load from cache
-    handle = io.open(filename)
-    if handle ~= nil then
-      status, data = pcall(json.decode, handle:read("*a"))
-      handle:close()
-    else
-      status, data = false, nil
-    end
+    env = get_env(io.open(filename))
   end
 
-  if not status or data == nil then
+  if env == nil then
     -- generate from nix and cache result
-    local command = [[
+    local command = ([[
       set -o pipefail
       nix print-dev-env \
         --json --quiet --option warn-dirty false \
         --reference-lock-file %q |
         tee %q
-    ]]
-    handle = io.popen(command:format(lock_file, filename))
+    ]]):format(lock_file, filename)
+    env = get_env(io.popen(command))
 
-    if handle == nil then
-      utils.log("Unable to get environment")
-      return {}
-    end
-
-    status, data = pcall(json.decode, handle:read("*a"))
-    handle:close()
-
-    if not status or data == nil then
+    if env == nil then
       utils.log("Unable to load environment")
       return {}
     end
@@ -145,7 +143,7 @@ function PLUGIN:MiseEnv(ctx)
   local variables = {} ---@type string[]
   local functions = {} ---@type string[]
 
-  for key, info in pairs(data.variables) do
+  for key, info in pairs(env.variables) do
     if VARS[key] == "ignore" then
       -- skip
     elseif info.type == "exported" then
@@ -167,7 +165,7 @@ function PLUGIN:MiseEnv(ctx)
     end
   end
 
-  for key, value in pairs(data.bashFunctions) do
+  for key, value in pairs(env.bashFunctions) do
     table.insert(functions, key)
     print(("%s() {%s}"):format(key, value))
   end
