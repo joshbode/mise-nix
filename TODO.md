@@ -1,1 +1,2 @@
-- unset `shellHook` variables
+- unset `shellHook` exports/variables/functions
+- set `profile` to prevent GC

@@ -152,34 +152,44 @@ function PLUGIN:MiseEnv(ctx)
   local variables = {} ---@type string[]
   local functions = {} ---@type string[]
 
+  -- should shell-specific outputs be emitted?
+  local shell = os.getenv("VIM") == nil
+
   for key, info in pairs(env.variables) do
     if VARS[key] == "ignore" then
       -- skip
     elseif info.type == "exported" then
       if key == "shellHook" then
-        print(info.value)
+        if shell then
+          print(info.value)
+        end
       else
         exports[#exports + 1] = { key = key, value = info.value }
       end
     elseif info.type == "var" then
-      table.insert(variables, key)
-      print(("%s=%q"):format(key, info.value))
-    elseif info.type == "array" then
-      local value = {}
-      for i, v in ipairs(info.value) do
-        value[i] = ("%q"):format(v)
+      if shell then
+        table.insert(variables, key)
+        print(("%s=%q"):format(key, info.value))
       end
-      table.insert(variables, key)
-      print(("%s=(%s)"):format(key, strings.join(value, " ")))
+    elseif info.type == "array" then
+      if shell then
+        local value = {}
+        for i, v in ipairs(info.value) do
+          value[i] = ("%q"):format(v)
+        end
+        table.insert(variables, key)
+        print(("%s=(%s)"):format(key, strings.join(value, " ")))
+      end
     end
   end
 
-  for key, value in pairs(env.bashFunctions) do
-    table.insert(functions, key)
-    print(("%s() {%s}"):format(key, value))
+  if shell then
+    for key, value in pairs(env.bashFunctions) do
+      table.insert(functions, key)
+      print(("%s() {%s}"):format(key, value))
+    end
+    print(make_unload_hook(project_root, variables, functions))
   end
-
-  print(make_unload_hook(project_root, variables, functions))
 
   return exports
 end
