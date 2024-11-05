@@ -32,31 +32,32 @@ local VARS = {
 ---@return string
 local function make_unload_hook(project_root, variables, functions)
   local shell = os.getenv("MISE_SHELL")
+  local hook_name = "_unload_mise_nix"
 
   local lines = {} ---@type string[]
-  table.insert(lines, "_unload_mise_nix() {")
-  table.insert(lines, ("  local PROJECT_ROOT=%q"):format(project_root))
-  table.insert(lines, '  if [[ "${PWD#${PROJECT_ROOT}}/" != "${PWD}/" ]]; then return; fi')
-  table.insert(lines, "  unset MISE_NIX")
+  table.insert(lines, ('%s() {'):format(hook_name))
+  table.insert(lines, ('  local PROJECT_ROOT=%q'):format(project_root))
+  table.insert(lines, '  if [[ "${CWD#${PROJECT_ROOT}/}" != "${CWD}" ]]; then return; fi')
+  table.insert(lines, ('  unset -f %s'):format(hook_name))
   for _, name in ipairs(variables) do
-    table.insert(lines, ("  unset %q"):format(name))
+    table.insert(lines, ('  unset %q'):format(name))
   end
   for _, name in ipairs(functions) do
-    table.insert(lines, ("  unset -f %q"):format(name))
+    table.insert(lines, ('  unset -f %q'):format(name))
   end
   if shell == "zsh" then
-    table.insert(lines, "  add-zsh-hook -D chpwd _unload_mise_nix")
+    table.insert(lines, ('  add-zsh-hook -d chpwd %s'):format(hook_name))
   elseif shell == "bash" then
-    table.insert(lines, "  PROMPT_COMMAND=${PROMPT_COMMAND%;_unload_mise_nix}")
+    table.insert(lines, ('  PROMPT_COMMAND=${PROMPT_COMMAND%%;%s}'):format(hook_name))
   end
-  table.insert(lines, "}")
+  table.insert(lines, '}')
 
   if shell == "zsh" then
-    table.insert(lines, "add-zsh-hook chpwd _unload_mise_nix")
+    table.insert(lines, ('add-zsh-hook chpwd %s'):format(hook_name))
   elseif shell == "bash" then
     table.insert(lines,
-      '  if [[ "${PROMPT_COMMAND%;_unload_mise_nix}" == "${PROMPT_COMMAND}" ]]; then')
-    table.insert(lines, '    PROMPT_COMMAND="${PROMPT_COMMAND};_unload_mise_nix"')
+      ('  if [[ "${PROMPT_COMMAND%%;%s}" == "${PROMPT_COMMAND}" ]]; then'):format(hook_name))
+    table.insert(lines, ('    PROMPT_COMMAND="${PROMPT_COMMAND};%s"'):format(hook_name))
     table.insert(lines, '  fi')
   end
 
@@ -112,8 +113,10 @@ function PLUGIN:MiseEnv(ctx)
   local temp_dir = string.gsub(os.getenv("TMPDIR") or "/tmp", "/+$", "")
   local filename = ("%s/mise-nix-%s"):format(temp_dir, hash)
 
+  local tag = ("%s:%s"):format(project_root, hash)
+
   -- check if already loaded
-  if os.getenv("MISE_NIX") == hash then
+  if os.getenv("MISE_NIX") == tag then
     return {}
   end
 
@@ -144,7 +147,7 @@ function PLUGIN:MiseEnv(ctx)
 
   ---@type { key: string, value: string}[]
   local exports = {
-    { key = "MISE_NIX", value = hash },
+    { key = "MISE_NIX", value = tag },
   }
   local variables = {} ---@type string[]
   local functions = {} ---@type string[]
