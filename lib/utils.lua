@@ -1,20 +1,26 @@
 local json = require("json")
 local strings = require("vfox.strings") ---@class Strings
 
+if table.unpack == nil then
+  table.unpack = unpack
+end
+
 ---Log info to stderr
 ---@param message any
 local function log(message, ...)
   if ... ~= nil then
-    local args = {}
-    for i, value in ipairs({...}) do
-      args[i] = type(value) == "table" and json.encode(value) or value
+    local args = { ... }
+    for i, value in ipairs(args) do
+      if type(value) == "table" then
+        args[i] = json.encode(value)
+      end
     end
     message = message:format(table.unpack(args))
   elseif type(message) ~= "string" then
     message = json.encode(message)
   end
 
-  message = string.gsub(message, "'", "'\\''")  -- quote single quotes
+  message = string.gsub(message, "'", "'\\''") -- quote single quotes
   print(("printf 'mise-nix: %%s\n' '%s' >&2"):format(message))
 end
 
@@ -83,8 +89,12 @@ end
 ---@param ... string File to hash
 ---@return string?
 local function get_hash(...)
+  if ... == nil then
+    return nil
+  end
+
   local files = { ... }
-  local command = ("cat %s | openssl sha256"):format(string.rep("%q", #files, " "))
+  local command = ("cat%s | openssl sha256"):format(string.rep(" %q", #files))
   local handle = io.popen(command:format(table.unpack(files)))
   if handle ~= nil then
     local result = handle:read("*l")
