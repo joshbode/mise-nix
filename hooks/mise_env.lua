@@ -12,57 +12,7 @@ local VARS = {
   TMP = "ignore",
   TMPDIR = "ignore",
   TZ = "ignore",
-  -- bash vars
-  BASH = "ignore",
-  HOSTTYPE = "ignore",
-  IFS = "ignore",
-  LINENO = "ignore",
-  MACHTYPE = "ignore",
-  OPTARG = "ignore",
-  OPTERR = "ignore",
-  OPTIND = "ignore",
-  OSTYPE = "ignore",
-  PS4 = "ignore",
-  SHELL = "ignore",
 }
-
----@param project_root string
----@param variables string[]
----@param functions string[]
----@return string
-local function make_unload_hook(project_root, variables, functions)
-  local shell = os.getenv("MISE_SHELL")
-  local hook_name = "_unload_mise_nix"
-
-  local lines = {} ---@type string[]
-  table.insert(lines, ('%s() {'):format(hook_name))
-  table.insert(lines, ('  local PROJECT_ROOT=%q'):format(project_root))
-  table.insert(lines, '  if [[ "${CWD#${PROJECT_ROOT}/}" != "${CWD}" ]]; then return; fi')
-  table.insert(lines, ('  unset -f %s'):format(hook_name))
-  for _, name in ipairs(variables) do
-    table.insert(lines, ('  unset %q'):format(name))
-  end
-  for _, name in ipairs(functions) do
-    table.insert(lines, ('  unset -f %q'):format(name))
-  end
-  if shell == "zsh" then
-    table.insert(lines, ('  add-zsh-hook -d chpwd %s'):format(hook_name))
-  elseif shell == "bash" then
-    table.insert(lines, ('  PROMPT_COMMAND=${PROMPT_COMMAND%%;%s}'):format(hook_name))
-  end
-  table.insert(lines, '}')
-
-  if shell == "zsh" then
-    table.insert(lines, ('add-zsh-hook chpwd %s'):format(hook_name))
-  elseif shell == "bash" then
-    table.insert(lines,
-      ('  if [[ "${PROMPT_COMMAND%%;%s}" == "${PROMPT_COMMAND}" ]]; then'):format(hook_name))
-    table.insert(lines, ('    PROMPT_COMMAND="${PROMPT_COMMAND};%s"'):format(hook_name))
-    table.insert(lines, '  fi')
-  end
-
-  return strings.join(lines, "\n")
-end
 
 ---Load environment from handle
 ---@param handle file*?
@@ -149,46 +99,13 @@ function PLUGIN:MiseEnv(ctx)
   local exports = {
     { key = "MISE_NIX", value = tag },
   }
-  local variables = {} ---@type string[]
-  local functions = {} ---@type string[]
-
-  -- should shell-specific outputs be emitted?
-  local shell = os.getenv("VIM") == nil
 
   for key, info in pairs(env.variables) do
     if VARS[key] == "ignore" then
       -- skip
     elseif info.type == "exported" then
-      if key == "shellHook" then
-        if shell then
-          print(info.value)
-        end
-      else
-        exports[#exports + 1] = { key = key, value = info.value }
-      end
-    elseif info.type == "var" then
-      if shell then
-        table.insert(variables, key)
-        print(("%s=%q"):format(key, info.value))
-      end
-    elseif info.type == "array" then
-      if shell then
-        local value = {}
-        for i, v in ipairs(info.value) do
-          value[i] = ("%q"):format(v)
-        end
-        table.insert(variables, key)
-        print(("%s=(%s)"):format(key, strings.join(value, " ")))
-      end
+      exports[#exports + 1] = { key = key, value = info.value }
     end
-  end
-
-  if shell then
-    for key, value in pairs(env.bashFunctions) do
-      table.insert(functions, key)
-      print(("%s() {%s}"):format(key, value))
-    end
-    print(make_unload_hook(project_root, variables, functions))
   end
 
   return exports
