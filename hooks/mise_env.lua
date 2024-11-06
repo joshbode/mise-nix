@@ -7,9 +7,8 @@ local utils = require("utils")
 local VARS = {
   -- exported
   HOME = "ignore",
-  TEMP = "ignore",
+  SHELL = "ignore",
   TERM = "ignore",
-  TMP = "ignore",
   TMPDIR = "ignore",
   TZ = "ignore",
 }
