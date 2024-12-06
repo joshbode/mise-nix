@@ -7,7 +7,7 @@ Enable flake development environments, equivalent to `nix develop`.
 To install the `nix` plugin, run:
 
 ```sh
-$ mise plugins install nix
+$ mise plugins install https://github.com/joshbode/mise-nix
 ```
 
 ## Configuration
