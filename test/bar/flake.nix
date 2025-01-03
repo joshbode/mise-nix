@@ -30,9 +30,9 @@
       devShells = eachSystem (pkgs: {
         default = pkgs.mkShell {
           packages = with pkgs; [ yash ];
-          shellHook = ''
-            export FOO=bar
-          '';
+          env = {
+            BAR = "bar";
+          };
         };
       });
     };
