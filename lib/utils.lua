@@ -110,11 +110,90 @@ local function get_hash(...)
   end
 end
 
+---Load environment from handle
+---@param handle file*?
+---@return DevEnv?
+local function get_env(handle)
+  if handle ~= nil then
+    local status, data = pcall(json.decode, handle:read("*a"))
+    handle:close()
+    return status and data or nil
+  else
+    return nil
+  end
+end
+
+---Get environment info
+---@param options Options
+---@return {tag: string, env: DevEnv}?
+local function load_env(options)
+  if options.flake_lock == nil then
+    options.flake_lock = "flake.lock"
+  end
+
+  local project_root = find_project_root("flake.nix")
+  if project_root == nil then
+    log("Unable to find flake")
+    return nil
+  end
+
+  local flake_file = ("%s/%s"):format(project_root, "flake.nix")
+  local lock_file = ("%s/%s"):format(project_root, options.flake_lock)
+
+  if not exists(lock_file) then
+    log("Lock file does not exist: %s", lock_file)
+    return nil
+  end
+
+  local hash = get_hash(flake_file, lock_file)
+  if hash == nil then
+    log("Unable to hash flake files")
+    return nil
+  end
+
+  local temp_dir = string.gsub(os.getenv("TMPDIR") or "/tmp", "/+$", "")
+  local filename = ("%s/mise-nix-%s"):format(temp_dir, hash)
+  local tag = ("%s:%s"):format(project_root, hash)
+
+  ---@type DevEnv?
+  local env = nil
+
+  -- check if already loaded
+  if os.getenv("MISE_NIX") == tag then
+    return nil
+  end
+
+  if exists(filename) then
+    -- load from cache
+    env = get_env(io.open(filename))
+  end
+
+  if env == nil then
+    -- generate from nix and cache result
+    local command = ([[
+      set -o pipefail
+      nix print-dev-env \
+        --json --quiet --option warn-dirty false \
+        --reference-lock-file %q |
+        tee %q
+    ]]):format(lock_file, filename)
+    env = get_env(io.popen(command))
+
+    if env == nil then
+      log("Unable to load environment")
+      return nil
+    end
+  end
+
+  return { tag = tag, env = env }
+end
+
 ---@module 'utils'
 return {
   exists = exists,
   find_project_root = find_project_root,
   get_cwd = get_cwd,
   get_hash = get_hash,
+  load_env = load_env,
   log = log,
 }
