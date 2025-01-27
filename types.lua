@@ -14,6 +14,7 @@
 --- Nix plugin options
 ---@class Options
 ---@field flake_lock string? Optional lock file to use
+---@field attribute string? Optional attribute to use
 
 --- Nix plugin context
 ---@class Context

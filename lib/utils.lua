@@ -94,7 +94,7 @@ local function get_hash(...)
   end
 
   local files = { ... }
-  local command = ("cat%s | openssl sha256"):format(string.rep(" %q", #files))
+  local command = ("cat%s | cksum -a sha256"):format(string.rep(" %q", #files))
   local handle = io.popen(command:format(table.unpack(files)))
   if handle ~= nil then
     local result = handle:read("*l")
@@ -131,6 +131,10 @@ local function load_env(options)
     options.flake_lock = "flake.lock"
   end
 
+  if options.attribute == nil then
+    options.attribute = "default"
+  end
+
   local project_root = find_project_root("flake.nix")
   if project_root == nil then
     log("Unable to find flake")
@@ -152,8 +156,8 @@ local function load_env(options)
   end
 
   local temp_dir = string.gsub(os.getenv("TMPDIR") or "/tmp", "/+$", "")
-  local filename = ("%s/mise-nix-%s"):format(temp_dir, hash)
-  local tag = ("%s:%s"):format(project_root, hash)
+  local filename = ("%s/mise-nix-%s-%s"):format(temp_dir, hash, options.attribute)
+  local tag = ("%s:%s-%s"):format(project_root, hash, options.attribute)
 
   ---@type DevEnv?
   local env = nil
@@ -174,9 +178,9 @@ local function load_env(options)
       set -o pipefail
       nix print-dev-env \
         --json --quiet --option warn-dirty false \
-        --reference-lock-file %q |
+        --reference-lock-file %q .#%s |
         tee %q
-    ]]):format(lock_file, filename)
+    ]]):format(lock_file, options.attribute, filename)
     env = get_env(io.popen(command))
 
     if env == nil then
