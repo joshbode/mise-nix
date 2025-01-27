@@ -94,7 +94,7 @@ local function get_hash(...)
   end
 
   local files = { ... }
-  local command = ("cat%s | openssl sha256"):format(string.rep(" %q", #files))
+  local command = ("cat%s | cksum -a sha256"):format(string.rep(" %q", #files))
   local handle = io.popen(command:format(table.unpack(files)))
   if handle ~= nil then
     local result = handle:read("*l")
