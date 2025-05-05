@@ -171,11 +171,11 @@ local function load_env(options)
   if env == nil then
     -- generate from nix and cache result
     local command = ([[
-      set -o pipefail
-      nix print-dev-env \
-        --json --quiet --option warn-dirty false \
-        --reference-lock-file %q |
-        tee %q
+      bash -o pipefail -c '
+        nix print-dev-env \
+          --json --quiet --option warn-dirty false \
+          --reference-lock-file %q | tee %q
+      '
     ]]):format(lock_file, filename)
     env = get_env(io.popen(command))
 
