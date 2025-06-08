@@ -14,6 +14,7 @@
 --- Nix plugin options
 ---@class Options
 ---@field flake_lock string? Optional lock file to use
+---@field profile_dir string? Optional profile directory to use
 
 --- Nix plugin context
 ---@class Context
@@ -26,8 +27,13 @@
 
 --- VFox built-in strings library
 ---@class Strings
----@field split fun(x: string, delim: string): string[] Split string by delimiter into array of strings
----@field join fun(x: string[], delim: string): string Join array of strings with delimiter
+---@field contains fun(x: string, substr: string): boolean
+---@field has_prefix fun(x: string, prefix: string): boolean
+---@field has_suffix fun(x: string, suffix: string): boolean
+---@field join fun(x: string[], sep: string): string Join array of strings with delimiter
+---@field split fun(x: string, sep: string): string[] Split string by delimiter into array of strings
+---@field trim fun(x: string, suffix: string): string
+---@field trim_space fun(x: string): string
 
 --- Development environment
 ---@class DevEnv

@@ -1,5 +1,7 @@
 local json = require("json")
-local strings = require("vfox.strings") ---@class Strings
+
+---@type Strings
+local strings = require("vfox.strings")
 
 if table.unpack == nil then
   table.unpack = unpack
@@ -20,8 +22,7 @@ local function log(message, ...)
     message = json.encode(message)
   end
 
-  message = string.gsub(message, "'", "'\\''") -- quote single quotes
-  print(("printf 'mise-nix: %%s\n' '%s' >&2"):format(message))
+  print(("printf 'mise-nix: %%s\n' %q >&2"):format(message))
 end
 
 ---Check if file exists
@@ -69,6 +70,8 @@ local function find_project_root(filename, cwd, i)
     end
   end
 
+  ---@cast cwd string
+
   if exists(("%s/%s"):format(cwd, filename)) then
     return cwd
   else
@@ -110,11 +113,114 @@ local function get_hash(...)
   end
 end
 
+---Load environment from handle
+---@param handle file?
+---@return DevEnv?
+local function get_env(handle)
+  if handle ~= nil then
+    local status, data = pcall(json.decode, handle:read("*a"))
+    handle:close()
+    if status and type(data) == "table" then
+      return data
+    else
+      return nil
+    end
+  else
+    return nil
+  end
+end
+
+---Get environment info
+---@param options Options
+---@return {tag: string, env: DevEnv}?
+local function load_env(options)
+  if options.flake_lock == nil then
+    options.flake_lock = "flake.lock"
+  end
+  if options.profile_dir == nil then
+    options.profile_dir = ".mise-nix"
+  end
+
+  local project_root = find_project_root("flake.nix")
+  if project_root == nil then
+    log("Unable to find flake")
+    return nil
+  end
+
+  local flake_file = ("%s/%s"):format(project_root, "flake.nix")
+  local lock_file = ("%s/%s"):format(project_root, options.flake_lock)
+  local profile_dir = ("%s/%s"):format(project_root, options.profile_dir)
+
+  if not exists(lock_file) then
+    log("Lock file does not exist: %s", lock_file)
+    return nil
+  end
+
+  local hash = get_hash(flake_file, lock_file)
+  if hash == nil then
+    log("Unable to hash flake files")
+    return nil
+  end
+
+  local temp_dir = string.gsub(os.getenv("TMPDIR") or "/tmp", "/+$", "")
+  local filename = ("%s/mise-nix-%s"):format(temp_dir, hash)
+  local tag = ("%s:%s"):format(project_root, hash)
+
+  ---@type DevEnv?
+  local env = nil
+
+  -- check if already loaded
+  if os.getenv("MISE_NIX") == tag then
+    return nil
+  end
+
+  if exists(filename) then
+    -- load from cache
+    env = get_env(io.open(filename))
+  end
+
+  if env == nil then
+    -- generate from nix and cache result
+    local command = ([=[
+      set -euo pipefail
+
+      PROFILE_DIR=%q
+      LOCK_FILE=%q
+
+      if [[ ! -e ${PROFILE_DIR} ]]; then
+        mkdir "${PROFILE_DIR}"
+      fi
+
+      nix profile wipe-history \
+        --quiet \
+        --profile "${PROFILE_DIR}/profile"
+
+      nix print-dev-env \
+        --quiet \
+        --profile "${PROFILE_DIR}/profile" \
+        --reference-lock-file "${LOCK_FILE}" \
+        --option warn-dirty false \
+        --json |
+        tee %q
+    ]=]):format(profile_dir, lock_file, filename)
+    env = get_env(io.popen(command))
+
+    if env == nil then
+      log("Unable to load environment")
+      return nil
+    end
+  end
+
+  ---@cast env DevEnv
+  return { tag = tag, env = env }
+end
+
 ---@module 'utils'
 return {
   exists = exists,
   find_project_root = find_project_root,
   get_cwd = get_cwd,
   get_hash = get_hash,
+  load_env = load_env,
   log = log,
 }
