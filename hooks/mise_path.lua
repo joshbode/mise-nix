@@ -11,6 +11,12 @@ function PLUGIN:MisePath(ctx)
     options = {}
   end
 
+  local path = os.getenv("MISE_NIX_PATH")
+
+  if path ~= nil then
+    return strings.split(path, ":")
+  end
+
   ---@cast options Options
   local result = utils.load_env(options)
   if result == nil then
