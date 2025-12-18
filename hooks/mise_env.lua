@@ -2,7 +2,6 @@ local utils = require("utils")
 
 ---@dictionary "ignore" | "keep"
 local VARS = {
-  PATH = "ignore", -- handled in path hook
   HOME = "ignore",
   SHELL = "ignore",
   TERM = "ignore",
@@ -33,6 +32,9 @@ function PLUGIN:MiseEnv(ctx)
     ---@diagnostic disable-next-line: unnecessary-if
     if VARS[key] == "ignore" then
       -- skip
+    elseif key == "PATH" then
+      -- cache for path handler
+      exports[#exports + 1] = { key = "MISE_NIX_PATH", value = info.value }
     elseif info.type == "exported" then
       exports[#exports + 1] = { key = key, value = info.value }
     end

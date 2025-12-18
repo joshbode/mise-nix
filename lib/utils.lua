@@ -1,7 +1,7 @@
 local json = require("json")
 
 ---@type Strings
-local strings = require("vfox.strings")
+local strings = require("strings")
 
 if table.unpack == nil then
   table.unpack = unpack
@@ -114,7 +114,7 @@ local function get_hash(...)
 end
 
 ---Load environment from handle
----@param handle file?
+---@param handle file*?
 ---@return DevEnv?
 local function get_env(handle)
   if handle ~= nil then
@@ -122,12 +122,10 @@ local function get_env(handle)
     handle:close()
     if status and type(data) == "table" then
       return data
-    else
-      return nil
     end
-  else
-    return nil
   end
+
+  return nil
 end
 
 ---Get environment info
@@ -181,15 +179,13 @@ local function load_env(options)
 
   if env == nil then
     -- generate from nix and cache result
-    local command = ([=[
-      set -euo pipefail
+    env = get_env(io.popen(([=[
+      set -eu
 
       PROFILE_DIR=%q
       LOCK_FILE=%q
 
-      if [[ ! -e ${PROFILE_DIR} ]]; then
-        mkdir "${PROFILE_DIR}"
-      fi
+      mkdir -p "${PROFILE_DIR}"
 
       nix profile wipe-history \
         --quiet \
@@ -200,14 +196,18 @@ local function load_env(options)
         --profile "${PROFILE_DIR}/profile" \
         --reference-lock-file "${LOCK_FILE}" \
         --option warn-dirty false \
-        --json |
-        tee %q
-    ]=]):format(profile_dir, lock_file, filename)
-    env = get_env(io.popen(command))
+        --json
+    ]=]):format(profile_dir, lock_file)))
 
     if env == nil then
-      log("Unable to load environment")
+      log("Failed to load environment")
       return nil
+    end
+
+    local file = io.open(filename, "w")
+    if file ~= nil then
+      file:write(json.encode(env))
+      file:close()
     end
   end
 

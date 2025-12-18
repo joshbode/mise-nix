@@ -1,7 +1,7 @@
 local utils = require("utils")
 
 ---@type Strings
-local strings = require("vfox.strings")
+local strings = require("strings")
 
 function PLUGIN:MisePath(ctx)
   local options = ctx.options
@@ -9,6 +9,12 @@ function PLUGIN:MisePath(ctx)
     return {}
   elseif options == true then
     options = {}
+  end
+
+  local path = os.getenv("MISE_NIX_PATH")
+
+  if path ~= nil then
+    return strings.split(path, ":")
   end
 
   ---@cast options Options
