@@ -1,7 +1,7 @@
 local utils = require("utils")
 
 ---@type Strings
-local strings = require("vfox.strings")
+local strings = require("strings")
 
 function PLUGIN:MisePath(ctx)
   local options = ctx.options
