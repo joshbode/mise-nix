@@ -3,7 +3,7 @@ local utils = require("utils")
 ---@type Strings
 local strings = require("strings")
 
-function PLUGIN:MisePath(ctx)
+function PLUGIN.MisePath(_, ctx)
   local options = ctx.options
   if options == false then
     return {}

@@ -9,7 +9,7 @@ local VARS = {
   TZ = "ignore",
 }
 
-function PLUGIN:MiseEnv(ctx)
+function PLUGIN.MiseEnv(_, ctx)
   local options = ctx.options
   if options == false then
     return {}
@@ -24,9 +24,7 @@ function PLUGIN:MiseEnv(ctx)
   end
 
   ---@type { key: string, value: string}[]
-  local exports = {
-    { key = "MISE_NIX", value = result.tag },
-  }
+  local env = {}
 
   for key, info in pairs(result.env.variables) do
     ---@diagnostic disable-next-line: unnecessary-if
@@ -34,11 +32,15 @@ function PLUGIN:MiseEnv(ctx)
       -- skip
     elseif key == "PATH" then
       -- cache for path handler
-      exports[#exports + 1] = { key = "MISE_NIX_PATH", value = info.value }
+      env[#env + 1] = { key = "MISE_NIX_PATH", value = info.value }
     elseif info.type == "exported" then
-      exports[#exports + 1] = { key = key, value = info.value }
+      env[#env + 1] = { key = key, value = info.value }
     end
   end
 
-  return exports
+  return {
+    cacheable = true,
+    watch_files = { result.lock_file },
+    env = env,
+  }
 end

@@ -1,2 +1,1 @@
-- unset `shellHook` exports/variables/functions
-- set `profile` to prevent GC
+- use `cmd`, `file` and `env` modules: https://mise.jdx.dev/plugin-lua-modules.html

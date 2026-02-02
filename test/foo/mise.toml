@@ -1,0 +1,5 @@
+[env]
+_.nix = true
+
+[settings]
+env_cache = true

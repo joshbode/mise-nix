@@ -33,6 +33,11 @@
           env = {
             FOO = "foo";
           };
+          shellHook = ''
+            foo() {
+              printf 'FOO: %s''\n' "''${FOO}"
+            }
+          '';
         };
       });
     };

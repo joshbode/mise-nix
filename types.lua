@@ -22,8 +22,10 @@
 
 --- Mise plugin
 ---@class Plugin: PluginBase
----@field MisePath fun(self: Plugin, ctx: Context): string[] Update PATH
----@field MiseEnv fun(self: Plugin, ctx: Context): {key: string, value: string}[] Update environment
+---@field MiseEnv fun(self: Plugin, ctx: Context):
+---| { cacheable?: boolean, watch_files?: string[], env?: { key: string, value: string }[] } Update environment
+---@field MisePath fun(self: Plugin, ctx: Context):
+---| string[] Update PATH
 
 --- VFox built-in strings library
 ---@class Strings
@@ -40,3 +42,31 @@
 ---@field variables
 ---| { string: { type: "exported" | "var" | "array", value: any } }
 ---@field bashFunctions { string: string}
+
+--- Mise built-in cmd module
+---@class Cmd
+---@field exec fun(command: string, options?: { cwd?: string, env?: table, timeout?: number }): string
+
+--- Mise built-in json module
+---@class Json
+---@field encode fun(value: any): string
+---@field decode fun(str: string): any
+
+--- Mise built-in env module
+---@class Env
+---@field setenv fun(key: string, value: string)
+
+--- Mise built-in file module
+---@class File
+---@field exists fun(path: string): boolean
+---@field join_path fun(...: string): string
+---@field read fun(path: string): string
+---@field symlink fun(source: string, destination: string)
+
+--- Mise built-in log module
+---@class Log
+---@field trace fun(...: any)
+---@field debug fun(...: any)
+---@field info fun(...: any)
+---@field warn fun(...: any)
+---@field error fun(...: any)

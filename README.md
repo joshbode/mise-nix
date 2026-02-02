@@ -13,11 +13,14 @@ To install the `nix` plugin, run:
 $ mise plugins install nix
 ```
 
-In `.mise.toml`, enable the `nix` environment:
+In `mise.toml`, enable the `nix` environment:
 
 ```toml
 [env]
 _.nix = true
+
+[settings]
+env_cache = true
 ```
 
 This will automatically load the development environment from `flake.nix`,
@@ -37,4 +40,7 @@ For example, to use a specific lock-file, set the `flake_lock` option:
 ```toml
 [env]
 _.nix = { flake_lock = "some-flake.lock" }
+
+[settings]
+env_cache = true
 ```
