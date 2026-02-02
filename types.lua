@@ -13,6 +13,7 @@
 
 --- Nix plugin options
 ---@class Options
+---@field flake_attr string? Optional attr to use
 ---@field flake_lock string? Optional lock file to use
 ---@field profile_dir string? Optional profile directory to use
 

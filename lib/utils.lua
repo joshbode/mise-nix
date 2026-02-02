@@ -72,6 +72,9 @@ end
 ---@param options Options
 ---@return {env: DevEnv, lock_file: string}?
 local function load_env(options)
+  if options.flake_attr == nil then
+    options.flake_attr = "default"
+  end
   if options.flake_lock == nil then
     options.flake_lock = "flake.lock"
   end
@@ -99,20 +102,22 @@ local function load_env(options)
 
     PROFILE_DIR=%q
     LOCK_FILE=%q
+    ATTR=%q
 
     mkdir -p "${PROFILE_DIR}"
+    echo "*" > "${PROFILE_DIR}/.gitignore"
 
     nix profile wipe-history \
       --quiet \
       --profile "${PROFILE_DIR}/profile"
 
-    nix print-dev-env \
+    nix print-dev-env ".#${ATTR}" \
       --quiet \
       --profile "${PROFILE_DIR}/profile" \
       --reference-lock-file "${LOCK_FILE}" \
       --option warn-dirty false \
       --json
-  ]=]):format(profile_dir, lock_file))
+  ]=]):format(profile_dir, lock_file, options.flake_attr))
 
   if env == nil then
     log.error("Failed to load environment")

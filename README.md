@@ -32,6 +32,7 @@ The following options are supported:
 
 | Option        | Type     | Default      | Description                        |
 | ------------- | -------- | ------------ | ---------------------------------- |
+| `flake_attr`  | `string` | `default`    | Flake attribute to use             |
 | `flake_lock`  | `string` | `flake.lock` | Lock file to use                   |
 | `profile_dir` | `string` | `.mise-nix`  | Directory for keeping profile link |
 
