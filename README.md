@@ -10,7 +10,7 @@ Note: `shellHook` will not be loaded.
 To install the `nix` plugin, run:
 
 ```sh
-$ mise plugins install nix
+$ mise plugins install https://github.com/joshbode/mise-nix
 ```
 
 In `mise.toml`, enable the `nix` environment:
