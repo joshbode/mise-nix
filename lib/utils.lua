@@ -81,6 +81,30 @@ local HOOK_IGNORE = {
   TMP = true,
 }
 
+---Remove entries outside the Nix store that are already on the user's PATH
+---(e.g. `/usr/bin` added by a hook): mise prepends these and treats them as its
+---own, so they would shadow the user's ordering and be removed from the user's
+---PATH when mise reverts its changes
+---@param path string
+---@return string
+local function filter_path(path)
+  local user_path = os.getenv("__MISE_ORIG_PATH") or os.getenv("PATH") or ""
+
+  local existing = {}
+  for _, entry in ipairs(strings.split(user_path, ":")) do
+    existing[entry] = true
+  end
+
+  local result = {}
+  for _, entry in ipairs(strings.split(path, ":")) do
+    if entry ~= "" and (strings.has_prefix(entry, "/nix/store/") or not existing[entry]) then
+      result[#result + 1] = entry
+    end
+  end
+
+  return strings.join(result, ":")
+end
+
 ---Run shellHook in a clean environment and capture the exported variables
 ---@param env DevEnv Environment without shellHook applied
 ---@param profile_dir string
@@ -132,6 +156,10 @@ local function run_shell_hook(env, profile_dir, lock_file, attr)
     if key ~= nil and not HOOK_IGNORE[key] then
       variables[key] = { type = "exported", value = value }
     end
+  end
+
+  if variables.PATH ~= nil then
+    variables.PATH.value = filter_path(variables.PATH.value)
   end
 
   return variables
