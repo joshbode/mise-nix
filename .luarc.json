@@ -2,9 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime": {
     "version": "Lua 5.1",
-    "path": [
-      "lib/utils.lua",
-      "types.lua"
-    ]
+    "path": ["lib/?.lua"]
   }
 }

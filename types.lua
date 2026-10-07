@@ -1,15 +1,13 @@
 ---@meta
 
---- VFox plugin
+--- Plugin metadata (fields read by mise)
 ---@class PluginBase
 ---@field name string Plugin name
 ---@field version string Plugin version
----@field description string Plugin description
----@field homepage string Plugin homepage
----@field license string Plugin license, please choose a correct license according to your needs.
----@field minRuntimeVersion string? Minimum compatible vfox version.
----@field manifestUrl string? If configured, vfox will check for updates to the plugin at this address, otherwise it will check for updates at the global registry.
----@field notes table? Some things that require the user's attention
+---@field description string? Plugin description
+---@field author string? Plugin author
+---@field homepage string? Plugin homepage
+---@field license string? Plugin license
 
 --- Nix plugin options
 ---@class Options
@@ -24,12 +22,16 @@
 ---@field options Options | boolean Plugin options
 ---@field config_root string? Root of the config file declaring the directive
 
+--- Result of the env hook
+---@class MiseEnvResult
+---@field cacheable boolean? Whether mise may cache the result
+---@field watch_files string[]? Files whose mtimes invalidate the cache
+---@field env { key: string, value: string }[]? Environment variables
+
 --- Mise plugin
 ---@class Plugin: PluginBase
----@field MiseEnv fun(self: Plugin, ctx: Context):
----| { cacheable?: boolean, watch_files?: string[], env?: { key: string, value: string }[] } Update environment
----@field MisePath fun(self: Plugin, ctx: Context):
----| string[] Update PATH
+---@field MiseEnv fun(self: Plugin, ctx: Context): MiseEnvResult Update environment
+---@field MisePath fun(self: Plugin, ctx: Context): string[] Update PATH
 
 --- VFox built-in strings library
 ---@class Strings

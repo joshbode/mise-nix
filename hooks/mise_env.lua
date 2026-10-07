@@ -28,7 +28,6 @@ function PLUGIN.MiseEnv(_, ctx)
   local env = {}
 
   for key, value in pairs(result.variables) do
-    ---@diagnostic disable-next-line: unnecessary-if
     if VARS[key] ~= "ignore" then
       env[#env + 1] = { key = key, value = value }
     end
