@@ -1,5 +1,5 @@
 [env]
-_.nix = true
+_.nix = { shell_hook = true }
 
 [settings]
 env_cache = true
