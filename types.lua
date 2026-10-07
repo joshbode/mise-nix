@@ -16,6 +16,7 @@
 ---@field flake_attr string? Optional attr to use
 ---@field flake_lock string? Optional lock file to use
 ---@field profile_dir string? Optional profile directory to use
+---@field shell_hook boolean? Optionally run shellHook
 
 --- Nix plugin context
 ---@class Context
@@ -40,8 +41,7 @@
 
 --- Development environment
 ---@class DevEnv
----@field variables
----| { string: { type: "exported" | "var" | "array", value: any } }
+---@field variables table<string, { type: "exported" | "var" | "array", value: any }>
 ---@field bashFunctions { string: string}
 
 --- Mise built-in cmd module

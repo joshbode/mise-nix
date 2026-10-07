@@ -34,6 +34,8 @@
             FOO = "foo";
           };
           shellHook = ''
+            echo "this should not be in the environment"
+            export FOO_HOOK="''${FOO}-hook"
             foo() {
               printf 'FOO: %s''\n' "''${FOO}"
             }
