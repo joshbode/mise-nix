@@ -35,6 +35,7 @@
           };
           shellHook = ''
             echo "this should not be in the environment"
+            export PATH="/usr/bin:$PATH"
             export FOO_HOOK="''${FOO}-hook"
             foo() {
               printf 'FOO: %s''\n' "''${FOO}"

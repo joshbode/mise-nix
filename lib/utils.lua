@@ -311,6 +311,8 @@ local function load_env(options, config_root)
   local variables = read_cache(cache_file, profile_dir, key)
 
   if variables == nil then
+    log.debug("Building environment")
+
     variables = build_env(project_root, profile_dir, lock_file, options.flake_attr)
     if variables == nil then
       log.error("Failed to load environment")

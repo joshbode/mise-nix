@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check version matches tag
+        run: |
+          version="$(sed -n 's/^  version = "\(.*\)",$/\1/p' metadata.lua)"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::metadata.lua version (${version}) does not match tag (${GITHUB_REF_NAME})"
+            exit 1
+          fi
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" --verify-tag --generate-notes --title "${GITHUB_REF_NAME}"

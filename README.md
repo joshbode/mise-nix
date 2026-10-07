@@ -26,6 +26,12 @@ env_cache = true
 This will automatically load the development environment from `flake.nix`,
 equivalent to entering the shell via `nix develop`.
 
+To install a specific [release](https://github.com/joshbode/mise-nix/releases):
+
+```sh
+$ mise plugins install nix https://github.com/joshbode/mise-nix#v0.1.0
+```
+
 ## Configuration
 
 The following options are supported:
@@ -83,3 +89,29 @@ _.nix = { watch_files = ["nix/*.nix"] }
 The same files are reported to mise, so the `env_cache` setting can also avoid
 running the plugin at all, although mise does not cache an environment that
 includes redacted or encrypted values (e.g. from `sops`).
+
+## Development
+
+Tools and tasks are defined in `mise.toml`:
+
+```sh
+$ mise run fmt   # format Lua code
+$ mise run lint  # check formatting and types
+$ mise run test  # integration tests (requires nix)
+```
+
+The tests evaluate copies of the fixture flakes in `test/` with the plugin
+installed into an isolated mise (separate data, config and state directories),
+so they don't affect your own installation.
+
+## Releasing
+
+From an up-to-date, clean `main`:
+
+```sh
+$ mise run release 0.1.0
+```
+
+This sets the version in `metadata.lua`, then commits, tags (`v0.1.0`) and
+pushes. The release workflow runs the tests, checks the tag matches
+`metadata.lua` and publishes a GitHub release with generated notes.

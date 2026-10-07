@@ -1,0 +1,24 @@
+[tools]
+jq = "1"
+lua-language-server = "3"
+stylua = "2"
+
+[tasks.fmt]
+description = "Format Lua code"
+run = "stylua ."
+
+[tasks.lint]
+description = "Check formatting and types"
+run = [
+  "stylua --check .",
+  "lua-language-server --check . --checklevel=Information",
+]
+
+[tasks.test]
+description = "Run integration tests (requires nix)"
+run = "test/run.sh"
+
+[tasks.release]
+description = "Tag and push a release (the release workflow publishes it)"
+usage = 'arg "<version>" help="Version to release, e.g. 0.1.0"'
+run = 'scripts/release.sh {{usage.version}}'
