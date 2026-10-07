@@ -1,1 +1,0 @@
-- use `cmd`, `file` and `env` modules: https://mise.jdx.dev/plugin-lua-modules.html
