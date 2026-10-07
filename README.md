@@ -36,6 +36,7 @@ The following options are supported:
 | `flake_lock`  | `string` | `flake.lock` | Lock file to use                   |
 | `profile_dir` | `string` | `.mise-nix`  | Directory for keeping profile link |
 | `shell_hook`  | `bool`   | `false`      | Run `shellHook` (see below)        |
+| `watch_files` | `array`  | `[]`         | Extra files to watch (see below)   |
 
 For example, to use a specific lock-file, set the `flake_lock` option:
 
@@ -62,3 +63,23 @@ The hook is run non-interactively in a clean environment (only `HOME`, `USER`
 and `LOGNAME` are passed through), with its output discarded. Only exported
 variables are kept, so functions and aliases defined by the hook are not
 available.
+
+Entries the hook adds to `PATH` that are already on your `PATH` (e.g.
+`/usr/bin`) are dropped, so they keep their usual position after the flake's
+packages.
+
+## Caching
+
+The environment is cached in `profile_dir` (alongside the profile that keeps its
+packages from being garbage-collected) and is rebuilt when the options change or
+`flake.nix` or the lock file is modified. If the flake imports other files, add
+them with `watch_files` (globs, relative to the flake):
+
+```toml
+[env]
+_.nix = { watch_files = ["nix/*.nix"] }
+```
+
+The same files are reported to mise, so the `env_cache` setting can also avoid
+running the plugin at all, although mise does not cache an environment that
+includes redacted or encrypted values (e.g. from `sops`).

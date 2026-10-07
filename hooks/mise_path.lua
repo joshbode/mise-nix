@@ -11,23 +11,12 @@ function PLUGIN.MisePath(_, ctx)
     options = {}
   end
 
-  local path = os.getenv("MISE_NIX_PATH")
-
-  if path ~= nil then
-    return strings.split(path, ":")
-  end
-
+  -- the environment is cached by the env hook, which runs first
   ---@cast options Options
-  local result = utils.load_env(options)
-  if result == nil then
+  local result = utils.load_env(options, ctx.config_root)
+  if result == nil or result.variables.PATH == nil then
     return {}
   end
 
-  for key, info in pairs(result.env.variables) do
-    if key == "PATH" then
-      return strings.split(info.value, ":")
-    end
-  end
-
-  return {}
+  return strings.split(result.variables.PATH, ":")
 end

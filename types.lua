@@ -17,10 +17,12 @@
 ---@field flake_lock string? Optional lock file to use
 ---@field profile_dir string? Optional profile directory to use
 ---@field shell_hook boolean? Optionally run shellHook
+---@field watch_files string[]? Optional additional files (globs) to watch for changes
 
 --- Nix plugin context
 ---@class Context
 ---@field options Options | boolean Plugin options
+---@field config_root string? Root of the config file declaring the directive
 
 --- Mise plugin
 ---@class Plugin: PluginBase
@@ -60,8 +62,10 @@
 --- Mise built-in file module
 ---@class File
 ---@field exists fun(path: string): boolean
+---@field glob fun(pattern: string): string[]
 ---@field join_path fun(...: string): string
 ---@field read fun(path: string): string
+---@field stat fun(path: string): { size: number, is_file: boolean, is_dir: boolean, is_symlink: boolean, modified: number }?
 ---@field symlink fun(source: string, destination: string)
 
 --- Mise built-in log module

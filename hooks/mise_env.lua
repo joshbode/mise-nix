@@ -3,6 +3,7 @@ local utils = require("utils")
 ---@dictionary "ignore" | "keep"
 local VARS = {
   HOME = "ignore",
+  PATH = "ignore", -- handled in path hook
   SHELL = "ignore",
   TERM = "ignore",
   TMPDIR = "ignore",
@@ -18,7 +19,7 @@ function PLUGIN.MiseEnv(_, ctx)
   end
 
   ---@cast options Options
-  local result = utils.load_env(options)
+  local result = utils.load_env(options, ctx.config_root)
   if result == nil then
     return {}
   end
@@ -26,21 +27,16 @@ function PLUGIN.MiseEnv(_, ctx)
   ---@type { key: string, value: string}[]
   local env = {}
 
-  for key, info in pairs(result.env.variables) do
+  for key, value in pairs(result.variables) do
     ---@diagnostic disable-next-line: unnecessary-if
-    if VARS[key] == "ignore" then
-      -- skip
-    elseif key == "PATH" then
-      -- cache for path handler
-      env[#env + 1] = { key = "MISE_NIX_PATH", value = info.value }
-    elseif info.type == "exported" then
-      env[#env + 1] = { key = key, value = info.value }
+    if VARS[key] ~= "ignore" then
+      env[#env + 1] = { key = key, value = value }
     end
   end
 
   return {
     cacheable = true,
-    watch_files = { result.lock_file },
+    watch_files = result.watch_files,
     env = env,
   }
 end
