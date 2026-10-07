@@ -26,10 +26,11 @@ env_cache = true
 This will automatically load the development environment from `flake.nix`,
 equivalent to entering the shell via `nix develop`.
 
-To install a specific [release](https://github.com/joshbode/mise-nix/releases):
+To install a specific release, use its tag (see
+[releases](https://github.com/joshbode/mise-nix/releases)):
 
 ```sh
-$ mise plugins install nix https://github.com/joshbode/mise-nix#v0.1.0
+$ mise plugins install nix https://github.com/joshbode/mise-nix#<tag>
 ```
 
 ## Configuration
