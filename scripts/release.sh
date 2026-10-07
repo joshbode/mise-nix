@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-#
+#! /usr/bin/env bash
+
 # Release a new version: set the version in metadata.lua, then commit, tag and
 # push. The release workflow runs the tests and publishes the GitHub release.
 #
@@ -27,7 +27,7 @@ fi
 
 git fetch --quiet --tags origin
 [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] || die "main is not up to date with origin/main"
-if git rev-parse --quiet --verify "refs/tags/${TAG}" >/dev/null; then
+if git rev-parse --quiet --verify "refs/tags/${TAG}" > /dev/null; then
   die "tag already exists: ${TAG}"
 fi
 

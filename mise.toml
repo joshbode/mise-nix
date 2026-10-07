@@ -1,17 +1,21 @@
 [tools]
 jq = "1"
 lua-language-server = "3"
+shellcheck = "0.11"
+shfmt = "3"
 stylua = "2"
 
 [tasks.fmt]
-description = "Format Lua code"
-run = "stylua ."
+description = "Format Lua and shell code"
+run = ["stylua .", "git ls-files -z '*.sh' | xargs -0 shfmt --write"]
 
 [tasks.lint]
-description = "Check formatting and types"
+description = "Check formatting, types and shell scripts"
 run = [
   "stylua --check .",
   "lua-language-server --check . --checklevel=Information",
+  "git ls-files -z '*.sh' | xargs -0 shellcheck",
+  "git ls-files -z '*.sh' | xargs -0 shfmt --diff",
 ]
 
 [tasks.test]
@@ -21,4 +25,4 @@ run = "test/run.sh"
 [tasks.release]
 description = "Tag and push a release (the release workflow publishes it)"
 usage = 'arg "<version>" help="Version to release, e.g. 0.1.0"'
-run = 'scripts/release.sh {{usage.version}}'
+run = "scripts/release.sh {{usage.version}}"

@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-#
+#! /usr/bin/env bash
+
 # Integration tests: evaluate copies of the fixture flakes with the plugin
 # installed into an isolated mise (requires mise, nix and jq)
 
@@ -59,7 +59,7 @@ set_mtime() {
 # evaluate the environment in a directory, recording the number of builds
 evaluate() {
   local stderr="${WORK}/stderr"
-  if ! ENV_JSON="$(MISE_DEBUG=1 mise -C "$1" env --json 2>"${stderr}")"; then
+  if ! ENV_JSON="$(MISE_DEBUG=1 mise -C "$1" env --json 2> "${stderr}")"; then
     cat "${stderr}" >&2
     fail "mise env in $1"
     ENV_JSON="{}"
@@ -72,7 +72,7 @@ evaluate() {
 
 # check that a jq filter is true for the evaluated environment
 check() {
-  if jq -e "$2" >/dev/null <<<"${ENV_JSON}"; then
+  if jq -e "$2" > /dev/null <<< "${ENV_JSON}"; then
     pass "$1"
   else
     fail "$1" "$2"
@@ -125,7 +125,7 @@ check_builds "bar: rebuilds when profile is missing" 1
 
 mkdir -p "${BAR}/nix"
 touch "${BAR}/nix/shell.nix"
-printf '[env]\n_.nix = { watch_files = ["nix/*.nix"] }\n' >"${BAR}/mise.toml"
+printf '[env]\n_.nix = { watch_files = ["nix/*.nix"] }\n' > "${BAR}/mise.toml"
 evaluate "${BAR}"
 check_builds "bar: rebuilds when options change" 1
 evaluate "${BAR}"
@@ -152,7 +152,7 @@ check "foo: cached shellHook variables" '.FOO_HOOK == "foo-hook"'
 check_builds "foo: cached evaluation does not build" 0
 
 # shellcheck disable=SC2016 # expanded by dash
-if [[ "$(mise -C "${FOO}" exec -- dash -c 'printf %s "${FOO_HOOK}"' 2>/dev/null)" == "foo-hook" ]]; then
+if [[ "$(mise -C "${FOO}" exec -- dash -c 'printf %s "${FOO_HOOK}"' 2> /dev/null)" == "foo-hook" ]]; then
   pass "foo: exec runs flake packages with environment"
 else
   fail "foo: exec runs flake packages with environment"
